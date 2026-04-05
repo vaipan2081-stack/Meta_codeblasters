@@ -1,0 +1,46 @@
+name: incident-triage-env
+description: >
+  Production Incident Triage Environment - An LLM agent must diagnose root causes
+  from production log streams, metrics, and alerts across a simulated distributed
+  microservices architecture. Tasks range from single-service failures to complex
+  cascading outages with red herrings.
+
+author: vaibhav
+version: "1.0.0"
+
+tasks:
+  task1_easy:
+    name: "Single Service Failure"
+    description: "Diagnose a straightforward single-service crash from clear error logs."
+    difficulty: easy
+    max_steps: 15
+    time_limit_seconds: 120
+
+  task2_medium:
+    name: "Cascading Failure"
+    description: "Identify root cause in a multi-service cascading failure with correlated logs."
+    difficulty: medium
+    max_steps: 25
+    time_limit_seconds: 180
+
+  task3_hard:
+    name: "Silent Degradation"
+    description: "Diagnose subtle performance degradation with misleading symptoms and red herrings."
+    difficulty: hard
+    max_steps: 35
+    time_limit_seconds: 300
+
+api:
+  base_url: "http://localhost:7860"
+  endpoints:
+    reset: "/reset"
+    step: "/step"
+    state: "/state"
+    tasks: "/tasks"
+    grader: "/grader"
+    baseline: "/baseline"
+
+deployment:
+  platform: huggingface_spaces
+  port: 7860
+  docker: true
