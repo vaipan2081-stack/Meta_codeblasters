@@ -1,3 +1,12 @@
+---
+title: OpenEnv Incident Triage
+emoji: 🚨
+colorFrom: red
+colorTo: blue
+sdk: docker
+app_port: 7860
+---
+
 # Incident Triage Environment — OpenEnv Hackathon Submission
 
 A production incident triage environment for evaluating LLM agents' ability to diagnose complex distributed system failures.
