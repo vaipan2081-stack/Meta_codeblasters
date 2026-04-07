@@ -74,8 +74,11 @@ def smoke_test(base_url: str) -> bool:
     r = requests.post(f"{base}/step", json={
         "action_type": "list_services", "parameters": {}
     })
-    obs = r.json()
+    step_result = r.json()
+    obs = step_result["observation"]
     check("POST /step returns 200", r.status_code == 200)
+    check("Step includes reward", 0.0 <= step_result.get("reward", -1) <= 1.0)
+    check("Step includes done flag", isinstance(step_result.get("done"), bool))
     check("Returns service_list", obs["observation_type"] == "service_list")
     check("Has services data", len(obs["data"].get("services", [])) > 0)
     check("Step incremented", obs["step_number"] == 1)
@@ -85,7 +88,7 @@ def smoke_test(base_url: str) -> bool:
     r = requests.post(f"{base}/step", json={
         "action_type": "check_alerts", "parameters": {}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns alerts", obs["observation_type"] == "alerts")
     check("Has alert data", obs["data"].get("count", 0) > 0)
 
@@ -97,7 +100,7 @@ def smoke_test(base_url: str) -> bool:
         "action_type": "query_logs",
         "parameters": {"service": first_service}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns logs", obs["observation_type"] == "logs")
 
     # 8. Step: query_logs with level filter
@@ -106,7 +109,7 @@ def smoke_test(base_url: str) -> bool:
         "action_type": "query_logs",
         "parameters": {"service": first_service, "level": "ERROR"}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns filtered logs", obs["observation_type"] == "logs")
 
     # 9. Step: query_metrics
@@ -115,7 +118,7 @@ def smoke_test(base_url: str) -> bool:
         "action_type": "query_metrics",
         "parameters": {"service": first_service}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns metrics", obs["observation_type"] == "metrics")
 
     # 10. Step: check_dependencies
@@ -124,7 +127,7 @@ def smoke_test(base_url: str) -> bool:
         "action_type": "check_dependencies",
         "parameters": {"service": first_service}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns dependencies", obs["observation_type"] == "dependencies")
     check("Has depends_on", "depends_on" in obs["data"])
     check("Has depended_on_by", "depended_on_by" in obs["data"])
@@ -135,7 +138,7 @@ def smoke_test(base_url: str) -> bool:
         "action_type": "get_service_info",
         "parameters": {"service": first_service}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns service_info", obs["observation_type"] == "service_info")
 
     # 12. Step: query_traces
@@ -144,7 +147,7 @@ def smoke_test(base_url: str) -> bool:
         "action_type": "query_traces",
         "parameters": {}
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns traces", obs["observation_type"] == "traces")
 
     # 13. Submit diagnosis
@@ -160,7 +163,7 @@ def smoke_test(base_url: str) -> bool:
             "evidence": ["OOM killer logs", "Connection pool exhausted"],
         }
     })
-    obs = r.json()
+    obs = r.json()["observation"]
     check("Returns diagnosis_submitted", obs["observation_type"] == "diagnosis_submitted")
 
     # 14. Grade
@@ -178,6 +181,37 @@ def smoke_test(base_url: str) -> bool:
     print(f"     Affected:    {reward['affected_services_score']:.3f}")
     print(f"     Remediation: {reward['remediation_score']:.3f}")
     print(f"     Efficiency:  {reward['efficiency_bonus']:.3f}")
+
+    # 14b. Determinism check: same scenario + same diagnosis should produce same score
+    print("\n1️⃣4️⃣b  Determinism Check")
+    requests.post(f"{base}/reset", json={"task_id": "task1_easy", "seed": 999}).raise_for_status()
+    requests.post(f"{base}/step", json={
+        "action_type": "submit_diagnosis",
+        "parameters": {
+            "root_cause": "Database out of memory crash",
+            "root_cause_service": "order-db",
+            "affected_services": ["order-db", "order-service", "api-gateway"],
+            "severity": "critical",
+            "remediation": "Restart database and increase memory limit",
+            "evidence": ["OOM killer logs", "Connection pool exhausted"],
+        }
+    }).raise_for_status()
+    first = requests.post(f"{base}/grader").json()["reward"]["total_score"]
+
+    requests.post(f"{base}/reset", json={"task_id": "task1_easy", "seed": 999}).raise_for_status()
+    requests.post(f"{base}/step", json={
+        "action_type": "submit_diagnosis",
+        "parameters": {
+            "root_cause": "Database out of memory crash",
+            "root_cause_service": "order-db",
+            "affected_services": ["order-db", "order-service", "api-gateway"],
+            "severity": "critical",
+            "remediation": "Restart database and increase memory limit",
+            "evidence": ["OOM killer logs", "Connection pool exhausted"],
+        }
+    }).raise_for_status()
+    second = requests.post(f"{base}/grader").json()["reward"]["total_score"]
+    check("Same seed/action gives same score", abs(first - second) < 1e-9, f"first={first}, second={second}")
 
     # 15. Baseline endpoint
     print("\n1️⃣5️⃣  Baseline Info")
