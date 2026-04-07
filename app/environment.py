@@ -157,6 +157,45 @@ class IncidentTriageEnvironment:
         result.remaining_steps = remaining
         return result
 
+    def step_with_feedback(self, action: Action) -> tuple[Observation, float, bool, dict[str, Any]]:
+        """Return observation plus reward/done/info for evaluator compatibility."""
+        observation = self.step(action)
+        done = self._done
+        reward = self._compute_step_reward(action, observation)
+        info = {
+            "step": self._step,
+            "max_steps": self._max_steps,
+            "task_id": self._task_id,
+        }
+        return observation, reward, done, info
+
+    def _compute_step_reward(self, action: Action, observation: Observation) -> float:
+        """Heuristic trajectory reward in [0, 1]."""
+        if observation.observation_type == "error":
+            return 0.0
+
+        if observation.observation_type == "timeout":
+            return 0.0
+
+        if observation.observation_type == "diagnosis_submitted":
+            try:
+                reward, _ = self.grade()
+                return reward.total_score
+            except ValueError:
+                return 0.0
+
+        # Reward informative exploration with a small dense signal.
+        data = observation.data if isinstance(observation.data, dict) else {}
+        count = data.get("count") if isinstance(data.get("count"), int) else None
+
+        if count is not None:
+            return 0.12 if count > 0 else 0.03
+
+        if observation.observation_type in {"service_info", "dependencies", "metrics", "logs", "alerts", "traces", "service_list"}:
+            return 0.1
+
+        return 0.05
+
     # ── Action Handlers ─────────────────────────────────────────────────
 
     def _handle_query_logs(self, params: dict[str, Any]) -> Observation:

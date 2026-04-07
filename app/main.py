@@ -27,6 +27,7 @@ from app.models import (
     EnvironmentState,
     GraderResult,
     Observation,
+    StepResult,
     ResetRequest,
     Reward,
     TaskInfo,
@@ -128,7 +129,7 @@ def reset_environment(request: ResetRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.post("/step", response_model=Observation)
+@app.post("/step", response_model=StepResult)
 def take_step(action: Action):
     """Process an agent action and return the resulting observation.
 
@@ -142,8 +143,8 @@ def take_step(action: Action):
     - query_traces: Query distributed traces (params: trace_id?, service?)
     - submit_diagnosis: Submit final diagnosis (params: root_cause, root_cause_service, affected_services, remediation)
     """
-    obs = env.step(action)
-    return obs
+    obs, reward, done, info = env.step_with_feedback(action)
+    return StepResult(observation=obs, reward=reward, done=done, info=info)
 
 
 @app.get("/state", response_model=EnvironmentState)
