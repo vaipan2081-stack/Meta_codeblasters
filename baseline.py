@@ -131,15 +131,18 @@ def run_baseline(
         # Execute action
         step_resp = requests.post(f"{base}/step", json=action)
         step_resp.raise_for_status()
-        obs = step_resp.json()
+        step_result = step_resp.json()
+        obs = step_result["observation"]
+        step_reward = step_result.get("reward", 0.0)
+        done = bool(step_result.get("done", False))
 
         step += 1
 
         if verbose:
-            print(f"  → {obs['message']}")
+            print(f"  → {obs['message']} | reward={step_reward:.3f} | done={done}")
 
         # Check if episode is done
-        if obs.get("observation_type") in ("diagnosis_submitted", "timeout"):
+        if done or obs.get("observation_type") in ("diagnosis_submitted", "timeout"):
             break
 
         # Feed observation back to LLM
