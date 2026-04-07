@@ -102,6 +102,14 @@ class Observation(BaseModel):
     remaining_steps: int = Field(0, description="Steps remaining before timeout")
 
 
+class StepResult(BaseModel):
+    """Structured response for each environment step."""
+    observation: Observation
+    reward: float = Field(..., ge=0.0, le=1.0)
+    done: bool
+    info: dict[str, Any] = Field(default_factory=dict)
+
+
 class Reward(BaseModel):
     """Reward signal returned after episode completion."""
     total_score: float = Field(..., ge=0.0, le=1.0, description="Overall score 0-1")
