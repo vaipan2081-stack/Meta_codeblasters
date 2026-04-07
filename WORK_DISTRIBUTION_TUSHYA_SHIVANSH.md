@@ -3,6 +3,8 @@
 Last updated: 2026-04-07 (post-implementation update)
 Context: Vaibhav is excluded from active execution load for this phase.
 
+Update note (2026-04-08): Gradio UI ownership explicitly tracked and accelerated completion updates added.
+
 ## Principles used for fair split
 - Work is split by independent tracks so both can run in parallel with minimal blocking.
 - Tushya owns more of the total workload, especially code-critical and optimization-heavy tasks.
@@ -61,6 +63,7 @@ Context: Vaibhav is excluded from active execution load for this phase.
 - [ ] Set up/verify Hugging Face Space deployment
   - Confirm runtime boots and endpoint ping works.
 - [ ] Validate hosted reset/step/state/grader flow from public URL.
+- [ ] Build Gradio UI for Phase-3 human review (`app_ui.py`) and verify HF compatibility.
 
 ### B. Validation operations
 - [ ] Run official pre-validation script against current branch
@@ -105,6 +108,17 @@ Context: Vaibhav is excluded from active execution load for this phase.
 - Official pre-validation script output against hosted endpoint.
 - Final submission checklist artifact with links and outputs.
 
+## Accelerated completion by Tushya (ownership override due deadline)
+- [x] Implement Gradio UI scaffold (`app_ui.py`) for human review flow.
+- [x] Add Gradio runtime dependency to `requirements.txt`.
+- [x] Add Gradio run instructions to `README.md`.
+- [x] Add judge-facing runbook (`JUDGE.md`) and hosted validation checklist (`HOSTED_VALIDATION_CHECKLIST.md`).
+- [ ] Docker runtime verification and hosted HF checks still pending (needs deploy infra access/evidence).
+
+## Infra constraint noted on current machine
+- Docker CLI is unavailable on this workstation (`docker` command not found), so local container verification cannot be executed here.
+- Docker/HF validation remains assigned as deployment work until run on a machine with Docker/HF access.
+
 ## Minimal dependency map (to reduce blocking)
 - Shivansh can start immediately on docker/hf/prevalidation with current branch.
 - Tushya can implement code tasks immediately in parallel.
@@ -118,3 +132,4 @@ Context: Vaibhav is excluded from active execution load for this phase.
 ## Current status snapshot
 - Tushya track: COMPLETED locally (code + tests), waiting on your review and Shivansh deployment/validation outputs.
 - Shivansh track: IN PROGRESS (deployment, hosted validation, submission packaging).
+- Deadline acceleration update: Tushya also completed Gradio UI + docs/dependency tasks from deployment track to reduce risk.
