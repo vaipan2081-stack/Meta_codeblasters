@@ -1,6 +1,6 @@
 # Meta AI Hackathon - Pending Work Tracker
 
-Last updated: 2026-04-07
+Last updated: 2026-04-08
 Scope used: repo code + Official Website Info + team WhatsApp notes + attached PDF plans.
 
 ## How to use this tracker
@@ -80,10 +80,10 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
   - Done criteria: final README/submission docs mention only the shipped incident-triage environment; no contradictory task labels remain.
   - Notes: current context folder contains rough/legacy plan docs; keep as reference only.
 
-- [ ] Add a single source-of-truth submission checklist file
-  - Owner: 
+- [x] Add a single source-of-truth submission checklist file
+  - Owner: Tushya
   - Done criteria: one checklist with final commands, links, and acceptance criteria for submit day.
-  - Notes: this tracker can be extended for that purpose.
+  - Notes: Added `HOSTED_VALIDATION_CHECKLIST.md` and `JUDGE.md` for judge/deploy runbook coverage.
 
 - [ ] Final code hygiene pass
   - Owner: 
@@ -92,10 +92,10 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
 
 ## Optional (if time remains)
 
-- [ ] Add a lightweight human demo UI for Phase-3 review
-  - Owner: 
+- [x] Add a lightweight human demo UI for Phase-3 review
+  - Owner: Tushya
   - Done criteria: simple UI can reset task, send actions, show observations, submit diagnosis, and show score.
-  - Notes: not mandatory for validation, but useful for human judges.
+  - Notes: Completed as `app_ui.py` (Gradio). Includes reset, step, state, grader, and task refresh.
 
 - [ ] Add CI workflow for smoke test + docker build
   - Owner: 
