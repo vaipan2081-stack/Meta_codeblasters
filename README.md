@@ -57,13 +57,13 @@ Agents receive an alert about a production incident in a simulated microservices
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 
 # Start the server
-uvicorn app.main:app --host 0.0.0.0 --port 7860 --reload
+py -m uvicorn app.main:app --host 0.0.0.0 --port 7860 --reload
 
 # Run smoke tests (in another terminal)
-python smoke_test.py
+py smoke_test.py --api-url http://127.0.0.1:7860
 ```
 
 ### Docker
@@ -77,10 +77,27 @@ docker run -p 7860:7860 incident-triage-env
 
 ```bash
 # Requires OPENAI_API_KEY environment variable
-python baseline.py --task task1_easy
-python baseline.py --task task2_medium --model gpt-4o-mini
-python baseline.py --task task3_hard
+py baseline.py --task task1_easy
+py baseline.py --task task2_medium --model gpt-4o-mini
+py baseline.py --task task3_hard
 ```
+
+### Run Submission Inference Script
+
+```bash
+# Required for model calls
+set API_BASE_URL=https://your-llm-endpoint/v1
+set MODEL_NAME=your-model-name
+set HF_TOKEN=your-token
+
+# Optional, defaults to local server
+set ENV_URL=http://127.0.0.1:7860
+set TASK_NAME=task1_easy
+
+py inference.py
+```
+
+`inference.py` emits structured logs in `[START]`, `[STEP]`, `[END]` format.
 
 ## 🔌 API Endpoints
 
@@ -89,7 +106,7 @@ python baseline.py --task task3_hard
 | `GET` | `/health` | Health check |
 | `GET` | `/tasks` | List available tasks |
 | `POST` | `/reset` | Start a new episode (`{"task_id": "task1_easy"}`) |
-| `POST` | `/step` | Take an action (`{"action_type": "...", "parameters": {...}}`) |
+| `POST` | `/step` | Take an action and receive `observation`, `reward`, `done`, `info` |
 | `GET` | `/state` | Get current environment state |
 | `POST` | `/grader` | Grade the episode after diagnosis |
 | `GET` | `/baseline` | Baseline agent info |
@@ -136,3 +153,11 @@ Subtle memory leak → escalating GC pauses → Kafka heartbeat failures + DB co
 ## 📜 License
 
 MIT
+
+## ✅ Validation Checklist
+
+- Local smoke test passes (`py smoke_test.py --api-url http://127.0.0.1:7860`)
+- Docker container starts and `/health` returns 200
+- `inference.py` runs with required env vars and prints `[START]/[STEP]/[END]`
+- Baseline runs on all three tasks with reproducible seed values
+- Hosted URL (HF Space) passes smoke test using public endpoint
