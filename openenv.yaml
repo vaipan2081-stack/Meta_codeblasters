@@ -44,3 +44,14 @@ deployment:
   platform: huggingface_spaces
   port: 7860
   docker: true
+
+inference:
+  script: inference.py
+  required_env:
+    - API_BASE_URL
+    - MODEL_NAME
+    - HF_TOKEN
+  optional_env:
+    - OPENAI_API_KEY
+    - ENV_URL
+    - TASK_NAME
