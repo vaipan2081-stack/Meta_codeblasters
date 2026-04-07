@@ -99,6 +99,17 @@ py inference.py
 
 `inference.py` emits structured logs in `[START]`, `[STEP]`, `[END]` format.
 
+### Run Human Demo UI (Gradio)
+
+```bash
+# Optional ENV_URL if API is remote
+set ENV_URL=http://127.0.0.1:7860
+
+py app_ui.py
+```
+
+The UI starts on `http://127.0.0.1:7861` and supports reset, step actions, state inspection, and grading.
+
 ## 🔌 API Endpoints
 
 | Method | Endpoint | Description |
@@ -161,3 +172,8 @@ MIT
 - `inference.py` runs with required env vars and prints `[START]/[STEP]/[END]`
 - Baseline runs on all three tasks with reproducible seed values
 - Hosted URL (HF Space) passes smoke test using public endpoint
+
+## 👩‍⚖️ Judge / Reviewer Guide
+
+- Judge runbook: `JUDGE.md`
+- Hosted deployment checklist: `HOSTED_VALIDATION_CHECKLIST.md`
