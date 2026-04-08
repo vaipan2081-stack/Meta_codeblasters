@@ -16,13 +16,13 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
 
 ## P0 - Submission blockers (finish first)
 
-- [ ] Create root inference.py exactly as required by hackathon format
-  - Owner: 
+- [x] Create root inference.py exactly as required by hackathon format
+  - Owner: Tushya
   - Done criteria: script name is inference.py at repo root; uses OpenAI client; reads API_BASE_URL, MODEL_NAME, HF_TOKEN/OPENAI_API_KEY from env; emits strict [START], [STEP], [END] structured logs in required order.
   - Notes: official requirement explicitly says inference.py is mandatory; currently only baseline.py exists.
 
-- [ ] Align API behavior with validator expectations for step/reset/state contract
-  - Owner: 
+- [x] Align API behavior with validator expectations for step/reset/state contract
+  - Owner: Tushya
   - Done criteria: step flow returns/contains observation + reward + done semantics expected by validator/inference flow; no schema mismatch in automated checks.
   - Notes: current /step returns observation object only, while official sample flow expects reward/done each step.
 
@@ -31,18 +31,18 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
   - Done criteria: all mandatory checks pass locally before submission (spec, docker, baseline/inference, 3 tasks+graders, ping/reset behavior).
   - Notes: attach final validation output to team chat.
 
-- [ ] Ensure openenv.yaml matches exact required schema
-  - Owner: 
+- [x] Ensure openenv.yaml matches exact required schema
+  - Owner: Tushya
   - Done criteria: openenv validate passes with no warnings/errors; task metadata, API metadata, and required fields are complete.
   - Notes: planning docs repeatedly flagged schema strictness as a major risk.
 
-- [ ] Confirm deterministic grading and reproducibility
-  - Owner: 
+- [x] Confirm deterministic grading and reproducibility
+  - Owner: Tushya
   - Done criteria: same task + seed + same diagnosis gives identical score; no random drift in graders.
   - Notes: add at least one deterministic regression check in smoke tests.
 
-- [ ] Add and verify required environment variables for evaluation setup
-  - Owner: 
+- [x] Add and verify required environment variables for evaluation setup
+  - Owner: Tushya
   - Done criteria: API_BASE_URL, MODEL_NAME, HF_TOKEN (and OPENAI_API_KEY if required by code path) are documented and consumed correctly.
   - Notes: requirement is explicitly listed in official instructions.
 
@@ -58,8 +58,8 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
   - Done criteria: fixed-seed run table with per-task and overall score, model/version noted, command included.
   - Notes: keep this in README and optionally a separate artifact.
 
-- [ ] Harden smoke_test.py for submission reality
-  - Owner: 
+- [x] Harden smoke_test.py for submission reality
+  - Owner: Tushya
   - Done criteria: tests include schema checks, timeout behavior, invalid actions, grader range checks [0.0,1.0], and deterministic rerun check.
   - Notes: current smoke test is solid but should include deterministic check and submission-specific assertions.
 
