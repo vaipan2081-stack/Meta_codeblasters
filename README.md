@@ -11,7 +11,7 @@ app_port: 7860
 
 A production incident triage environment for evaluating LLM agents' ability to diagnose complex distributed system failures.
 
-## 🎯 Domain: Production Incident Triage
+## Domain: Production Incident Triage
 
 Agents receive an alert about a production incident in a simulated microservices architecture and must:
 1. **Investigate** — Query logs, metrics, alerts, traces, and service dependencies
@@ -24,7 +24,7 @@ Agents receive an alert about a production incident in a simulated microservices
 - **Measurable**: Clear ground truth enables objective scoring across multiple dimensions
 - **Scalable difficulty**: From single-service crashes to complex failures with red herrings
 
-## 📊 Task Difficulty Tiers
+##  Task Difficulty Tiers
 
 | Task | Difficulty | Max Steps | Description |
 |------|-----------|-----------|-------------|
@@ -32,7 +32,7 @@ Agents receive an alert about a production incident in a simulated microservices
 | `task2_medium` | Medium | 25 | Multi-service cascading failure with correlated logs |
 | `task3_hard` | Hard | 35 | Subtle degradation with misleading symptoms and red herrings |
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ├── app/
@@ -51,7 +51,7 @@ Agents receive an alert about a production incident in a simulated microservices
 └── requirements.txt
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Local Development
 
@@ -110,7 +110,7 @@ py app_ui.py
 
 The UI starts on `http://127.0.0.1:7861` and supports reset, step actions, state inspection, and grading.
 
-## 🏆 Baseline Performance
+## Baseline Performance
 
 The `gpt-4o-mini` baseline agent has been benchmarked with the following deterministic scores (fixed seed):
 
@@ -120,7 +120,7 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 | `task2_medium` | **0.7600** | Root Cause: 0.40, Affected: 0.15, Remediation: 0.13, Efficiency: 0.08 |
 | `task3_hard` | **0.4850** | Root Cause: 0.20, Affected: 0.10, Remediation: 0.12, Efficiency: 0.065 |
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -132,7 +132,7 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 | `POST` | `/grader` | Grade the episode after diagnosis |
 | `GET` | `/baseline` | Baseline agent info |
 
-## 🎮 Agent Actions
+## Agent Actions
 
 | Action | Parameters | Description |
 |--------|-----------|-------------|
@@ -145,7 +145,7 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 | `query_traces` | `trace_id?`, `service?` | Distributed traces |
 | `submit_diagnosis` | `root_cause`, `root_cause_service`, `affected_services`, `remediation` | Submit diagnosis |
 
-## 📈 Scoring
+##  Scoring
 
 The environment uses an advanced multi-dimensional grading system to ensure high-fidelity evaluation (USPs):
 
@@ -161,7 +161,7 @@ The environment uses an advanced multi-dimensional grading system to ensure high
 1.  **Adversarial Precision Grader (USP #1):** Unlike standard Jaccard similarity, we use a strict **F1 score** to penalize "hallucinated" affected services (False Positives) and missed ones (False Negatives). The grader output includes a diff showing exactly what the agent got wrong.
 2.  **Reasoning Trace Scorer (USP #2):** Prevents agents from "guessing" the answer. The grader audits the action history to ensure the agent targeted the correct service's logs and metrics during the investigation window before submitting their final answer.
 
-## 🏆 Baseline Performance
+## Baseline Performance
 
 The `gpt-4o-mini` baseline agent has been benchmarked with the following deterministic scores (fixed seed). *Note: Scores updated following the implementation of advanced USPs.*
 
@@ -171,7 +171,7 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 | `task2_medium` | **0.7800** | 0.30, 0.15, 0.13, 0.12, 0.08 |
 | `task3_hard` | **0.5150** | 0.20, 0.10, 0.10, 0.05, 0.065 |
 
-## 🧪 Scenarios
+## Scenarios
 
 ### Easy: OOM Database Crash
 PostgreSQL OOM on `order-db` → cascading 503s on `order-service`. Clear error trail.
@@ -188,11 +188,11 @@ Slow leak in `payment-service` refund handler → pool exhaustion → payment fa
 ### Hard: JVM Memory Leak with GC Storm
 Subtle memory leak → escalating GC pauses → Kafka heartbeat failures + DB connection resets. Network blip and Redis evictions as red herrings.
 
-## 📜 License
+##  License
 
 MIT
 
-## ✅ Validation Checklist
+## Validation Checklist
 
 - Local smoke test passes (`py smoke_test.py --api-url http://127.0.0.1:7860`)
 - Docker container starts and `/health` returns 200
