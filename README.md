@@ -99,6 +99,37 @@ py inference.py
 
 `inference.py` emits structured logs in `[START]`, `[STEP]`, `[END]` format.
 
+### LM Studio (OpenAI-Compatible) Local Testing
+
+Using LM Studio is acceptable for local development/testing as long as it exposes OpenAI-compatible APIs.
+
+Verified endpoints:
+- `GET /v1/models`
+- `POST /v1/chat/completions`
+
+Verified local models (example):
+- `qwen/qwen3.5-9b`
+- `dolphin-2.9.4-llama3.1-8b`
+
+Windows example for local run with LM Studio + Qwen:
+
+```bash
+set ENV_URL=http://127.0.0.1:7860
+set API_BASE_URL=http://localhost:1234/v1
+set MODEL_NAME=qwen/qwen3.5-9b
+set OPENAI_API_KEY=lm-studio
+set MAX_STEPS=4
+py inference.py
+```
+
+Observed test output pattern:
+- `[START] task=task1_easy ...`
+- `[STEP] ...` (multiple steps)
+- `[END] success=false steps=4 score=0.0000 rewards=[0.12, 0.12, 0.12, 0.1]`
+
+Note:
+- If LM Studio unloads the model during a run, the API may return `400 Model unloaded.`. Reload the model in LM Studio and rerun.
+
 ### Run Human Demo UI (Gradio)
 
 ```bash
