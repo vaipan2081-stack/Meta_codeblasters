@@ -110,6 +110,16 @@ py app_ui.py
 
 The UI starts on `http://127.0.0.1:7861` and supports reset, step actions, state inspection, and grading.
 
+## 🏆 Baseline Performance
+
+The `gpt-4o-mini` baseline agent has been benchmarked with the following deterministic scores (fixed seed):
+
+| Task | Score | Component Breakdown |
+|------|-------|---------------------|
+| `task1_easy` | **0.9100** | Root Cause: 0.40, Affected: 0.25, Remediation: 0.16, Efficiency: 0.10 |
+| `task2_medium` | **0.7600** | Root Cause: 0.40, Affected: 0.15, Remediation: 0.13, Efficiency: 0.08 |
+| `task3_hard` | **0.4850** | Root Cause: 0.20, Affected: 0.10, Remediation: 0.12, Efficiency: 0.065 |
+
 ## 🔌 API Endpoints
 
 | Method | Endpoint | Description |
