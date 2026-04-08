@@ -143,8 +143,9 @@ Used by `smoke_test.py` and `baseline.py`.
 
 This submission is not just "call an LLM and hope". It is engineered for judge reliability:
 
-1. **Evaluator-first architecture**
-  Clean contract and logs designed for automated grading.
+1. **Reproducibility-first architecture**
+  Clean contract and logs designed for objective evaluation.
+
 
 2. **Determinism as a first-class requirement**
   We explicitly validate seed reproducibility, which many teams skip.
@@ -256,5 +257,6 @@ Pending:
 
 ## 11) If You Need to Explain This in 20 Seconds (Pitch)
 
-"We built a deterministic OpenEnv-compatible decision environment with a clean step API, provider-agnostic inference runner, and reproducibility-focused test harness. It is engineered for reliable automated hackathon evaluation and deployable via Docker/HF Spaces."
+"We built a deterministic OpenEnv-compatible decision environment with a clean step API, provider-agnostic inference runner, and reproducibility-focused test harness. It is designed for reliable automated evaluation and deployable via Docker/HF Spaces."
+
 

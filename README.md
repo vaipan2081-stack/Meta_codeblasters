@@ -147,7 +147,8 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 
 ## 📈 Scoring
 
-The environment uses an advanced multi-dimensional grading system to ensure high-fidelity evaluation (USPs):
+The environment uses a multi-step scoring system for more rigorous evaluation (USPs):
+
 
 | Component | Weight | Metric | Description |
 | :--- | :--- | :--- | :--- |
@@ -157,9 +158,10 @@ The environment uses an advanced multi-dimensional grading system to ensure high
 | **Reasoning Trace** | 15% | **Rule-based Audit** | Verifying the agent actually investigated the root cause logs/metrics (USP #2). |
 | **Efficiency** | 15% | Linear Decay | Penalizing excessive steps and redundant queries. |
 
-### Advanced Features (USPs)
-1.  **Adversarial Precision Grader (USP #1):** Unlike standard Jaccard similarity, we use a strict **F1 score** to penalize "hallucinated" affected services (False Positives) and missed ones (False Negatives). The grader output includes a diff showing exactly what the agent got wrong.
-2.  **Reasoning Trace Scorer (USP #2):** Prevents agents from "guessing" the answer. The grader audits the action history to ensure the agent targeted the correct service's logs and metrics during the investigation window before submitting their final answer.
+### Key Evaluation Features (USPs)
+1.  **Strict Affected Service Scorer (USP #1):** Uses an **F1 score** to reward precision and penalize "hallucinated" affected services or missed ones. The grader output includes a detailed diff showing exactly where the agent's diagnosis diverged from the ground truth.
+2.  **Reasoning Trace Auditor (USP #2):** Verifies that agents actually investigated relevant logs and metrics before submitting a diagnosis. The grader audits the action history to ensure the correct services were targeted during the investigation window.
+
 
 ## 🏆 Baseline Performance
 
