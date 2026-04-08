@@ -102,6 +102,9 @@ py inference.py
 ### Run Human Demo UI (Gradio)
 
 ```bash
+# Start backend first (required)
+py -m uvicorn app.main:app --host 0.0.0.0 --port 7860
+
 # Optional ENV_URL if API is remote
 set ENV_URL=http://127.0.0.1:7860
 
@@ -110,15 +113,23 @@ py app_ui.py
 
 The UI starts on `http://127.0.0.1:7861` and supports reset, step actions, state inspection, and grading.
 
-## 🏆 Baseline Performance
+## 🏆 Baseline Performance (Reproducible)
 
-The `gpt-4o-mini` baseline agent has been benchmarked with the following deterministic scores (fixed seed):
+Run the baseline with a fixed seed and record real scores before final submission.
 
-| Task | Score | Component Breakdown |
-|------|-------|---------------------|
-| `task1_easy` | **0.9100** | Root Cause: 0.40, Affected: 0.25, Remediation: 0.16, Efficiency: 0.10 |
-| `task2_medium` | **0.7600** | Root Cause: 0.40, Affected: 0.15, Remediation: 0.13, Efficiency: 0.08 |
-| `task3_hard` | **0.4850** | Root Cause: 0.20, Affected: 0.10, Remediation: 0.12, Efficiency: 0.065 |
+```bash
+py baseline.py --task task1_easy --model gpt-4o-mini --seed 42
+py baseline.py --task task2_medium --model gpt-4o-mini --seed 42
+py baseline.py --task task3_hard --model gpt-4o-mini --seed 42
+```
+
+Fill this table from real run output (keep the terminal logs as evidence):
+
+| Task | Score | Model | Seed | Evidence |
+|------|-------|-------|------|----------|
+| `task1_easy` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
+| `task2_medium` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
+| `task3_hard` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
 
 ## 🔌 API Endpoints
 
@@ -144,6 +155,29 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 | `check_dependencies` | `service` (required) | Dependency graph |
 | `query_traces` | `trace_id?`, `service?` | Distributed traces |
 | `submit_diagnosis` | `root_cause`, `root_cause_service`, `affected_services`, `remediation` | Submit diagnosis |
+
+## 👀 Observation Space
+
+Every step returns a structured payload:
+
+```json
+{
+	"observation": {
+		"observation_type": "logs|metrics|alerts|traces|service_info|service_list|dependencies|diagnosis_submitted|timeout|error",
+		"data": {},
+		"message": "human-readable summary",
+		"step_number": 0,
+		"remaining_steps": 15
+	},
+	"reward": 0.0,
+	"done": false,
+	"info": {
+		"step": 0,
+		"max_steps": 15,
+		"task_id": "task1_easy"
+	}
+}
+```
 
 ## 📈 Scoring
 
