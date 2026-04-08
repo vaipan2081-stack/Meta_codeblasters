@@ -26,6 +26,8 @@ from app.models import (
     ServiceInfo,
 )
 from data.scenarios.scenarios import SERVICES_CATALOG, get_scenario
+from graders.grader import compute_reward
+
 
 
 class IncidentTriageEnvironment:
@@ -452,143 +454,24 @@ class IncidentTriageEnvironment:
 
         gt = self._scenario["ground_truth"]
 
-        # If no diagnosis submitted (timeout), give minimum score
-        if self._diagnosis is None:
-            reward = Reward(
-                total_score=0.0,
-                root_cause_score=0.0,
-                affected_services_score=0.0,
-                remediation_score=0.0,
-                efficiency_bonus=0.0,
-                explanation="No diagnosis was submitted. The episode timed out.",
-            )
-            return reward, gt
-
-        # ── Root cause scoring (40% weight) ──
-        root_cause_score = self._score_root_cause(
-            self._diagnosis.root_cause,
-            self._diagnosis.root_cause_service,
-            gt["root_cause"],
-            gt["root_cause_service"],
+        # Call standalone grader
+        diagnosis_dict = self._diagnosis.model_dump() if self._diagnosis else {}
+        results = compute_reward(
+            diagnosis=diagnosis_dict,
+            ground_truth=gt,
+            steps_used=self._step,
+            max_steps=self._max_steps,
+            action_history=self._action_history,
         )
-
-        # ── Affected services scoring (25% weight) ──
-        affected_score = self._score_affected_services(
-            self._diagnosis.affected_services,
-            gt["affected_services"],
-        )
-
-        # ── Remediation scoring (20% weight) ──
-        remediation_score = self._score_remediation(
-            self._diagnosis.remediation,
-            gt["remediation"],
-        )
-
-        # ── Efficiency bonus (15% weight) ──
-        efficiency = self._score_efficiency()
-
-        # Weighted total
-        total = (
-            0.40 * root_cause_score
-            + 0.25 * affected_score
-            + 0.20 * remediation_score
-            + 0.15 * efficiency
-        )
-
-        explanation_parts = [
-            f"Root cause identification: {root_cause_score:.2f}/1.0 (40% weight)",
-            f"  - Expected service: {gt['root_cause_service']}, Got: {self._diagnosis.root_cause_service}",
-            f"Affected services: {affected_score:.2f}/1.0 (25% weight)",
-            f"  - Expected: {gt['affected_services']}, Got: {self._diagnosis.affected_services}",
-            f"Remediation quality: {remediation_score:.2f}/1.0 (20% weight)",
-            f"Efficiency: {efficiency:.2f}/1.0 (15% weight)",
-            f"  - Used {self._step}/{self._max_steps} steps",
-            f"TOTAL: {total:.3f}",
-        ]
 
         reward = Reward(
-            total_score=round(min(1.0, max(0.0, total)), 4),
-            root_cause_score=round(root_cause_score, 4),
-            affected_services_score=round(affected_score, 4),
-            remediation_score=round(remediation_score, 4),
-            efficiency_bonus=round(efficiency, 4),
-            explanation="\n".join(explanation_parts),
+            total_score=results["total_score"],
+            root_cause_score=results["root_cause_score"],
+            affected_services_score=results["affected_services_score"],
+            remediation_score=results["remediation_score"],
+            efficiency_bonus=results["efficiency_bonus"],
+            reasoning_trace_score=results["reasoning_trace_score"],
+            explanation=results["explanation"],
         )
 
         return reward, gt
-
-    def _score_root_cause(
-        self, submitted_cause: str, submitted_service: str,
-        gt_cause: str, gt_service: str,
-    ) -> float:
-        """Score root cause identification using keyword matching + service match."""
-        score = 0.0
-
-        # Service match (50% of root cause score)
-        if submitted_service.lower().strip() == gt_service.lower().strip():
-            score += 0.5
-
-        # Keyword matching on root cause description (50% of root cause score)
-        gt_keywords = set(self._extract_keywords(gt_cause))
-        submitted_keywords = set(self._extract_keywords(submitted_cause))
-
-        if gt_keywords:
-            overlap = len(gt_keywords & submitted_keywords)
-            keyword_score = min(1.0, overlap / max(1, len(gt_keywords) * 0.5))
-            score += 0.5 * keyword_score
-
-        return min(1.0, score)
-
-    def _score_affected_services(
-        self, submitted: list[str], ground_truth: list[str],
-    ) -> float:
-        """Jaccard similarity between submitted and ground truth affected services."""
-        sub_set = {s.lower().strip() for s in submitted}
-        gt_set = {s.lower().strip() for s in ground_truth}
-
-        if not gt_set:
-            return 1.0 if not sub_set else 0.0
-
-        intersection = len(sub_set & gt_set)
-        union = len(sub_set | gt_set)
-
-        return intersection / union if union > 0 else 0.0
-
-    def _score_remediation(self, submitted: str, ground_truth: str) -> float:
-        """Score remediation using keyword overlap."""
-        gt_keywords = set(self._extract_keywords(ground_truth))
-        sub_keywords = set(self._extract_keywords(submitted))
-
-        if not gt_keywords:
-            return 0.5  # No ground truth remediation
-
-        overlap = len(gt_keywords & sub_keywords)
-        return min(1.0, overlap / max(1, len(gt_keywords) * 0.3))
-
-    def _score_efficiency(self) -> float:
-        """Reward using fewer steps. Linear decay from 1.0 at step 1 to 0.2 at max_steps."""
-        if self._max_steps <= 1:
-            return 1.0
-        ratio = self._step / self._max_steps
-        return max(0.2, 1.0 - 0.8 * ratio)
-
-    @staticmethod
-    def _extract_keywords(text: str) -> list[str]:
-        """Extract meaningful keywords from text."""
-        stop_words = {
-            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-            "have", "has", "had", "do", "does", "did", "will", "would", "could",
-            "should", "may", "might", "shall", "can", "to", "of", "in", "for",
-            "on", "with", "at", "by", "from", "as", "into", "through", "during",
-            "before", "after", "above", "below", "between", "out", "off", "over",
-            "under", "again", "further", "then", "once", "and", "but", "or", "nor",
-            "not", "so", "yet", "both", "either", "neither", "each", "every", "all",
-            "any", "few", "more", "most", "other", "some", "such", "no", "only",
-            "own", "same", "than", "too", "very", "just", "because", "if", "when",
-            "where", "how", "what", "which", "who", "whom", "this", "that", "these",
-            "those", "it", "its", "i", "my", "me", "we", "our", "you", "your", "he",
-            "him", "his", "she", "her", "they", "them", "their",
-        }
-
-        words = text.lower().replace(",", " ").replace(".", " ").replace("-", " ").split()
-        return [w for w in words if len(w) > 2 and w not in stop_words]

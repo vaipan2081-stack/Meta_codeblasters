@@ -231,12 +231,20 @@ Every step returns a structured payload:
 
 ## 📈 Scoring
 
-| Component | Weight | Method |
-|-----------|--------|--------|
-| Root Cause Identification | 40% | Service match + keyword overlap |
-| Affected Services | 25% | Jaccard similarity |
-| Remediation Quality | 20% | Keyword coverage |
-| Efficiency Bonus | 15% | Linear decay by step count |
+The environment uses a multi-step scoring system for more rigorous evaluation (USPs):
+
+| Component | Weight | Metric | Description |
+| :--- | :--- | :--- | :--- |
+| **Root Cause ID** | 30% | Keyword Match + SVC | Identifying the core issue and origin service. |
+| **Affected Services** | 20% | **F1 Score** | Balancing precision and recall of downstream impacts (USP #1). |
+| **Remediation** | 20% | Keyword Coverage | Effectiveness of the proposed fix actions. |
+| **Reasoning Trace** | 15% | **Rule-based Audit** | Verifying the agent actually investigated the root cause logs/metrics (USP #2). |
+| **Efficiency** | 15% | Linear Decay | Penalizing excessive steps and redundant queries. |
+
+### Key Evaluation Features (USPs)
+1.  **Strict Affected Service Scorer (USP #1):** Uses an **F1 score** to reward precision and penalize "hallucinated" affected services or missed ones. The grader output includes a detailed diff showing exactly where the agent's diagnosis diverged from the ground truth.
+2.  **Reasoning Trace Auditor (USP #2):** Verifies that agents actually investigated relevant logs and metrics before submitting a diagnosis. The grader audits the action history to ensure the correct services were targeted during the investigation window.
+
 
 ## Scenarios
 
