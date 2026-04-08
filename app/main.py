@@ -192,9 +192,9 @@ def baseline_info():
         ),
         "model": "gpt-4o",
         "expected_scores": {
-            "task1_easy": "0.70 - 0.90",
-            "task2_medium": "0.50 - 0.75",
-            "task3_hard": "0.30 - 0.55",
+            "task1_easy": "0.9100",
+            "task2_medium": "0.7600",
+            "task3_hard": "0.4850",
         },
         "run_command": "python baseline.py --task task1_easy --api-url http://localhost:7860",
     }
