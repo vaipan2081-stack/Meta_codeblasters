@@ -464,7 +464,7 @@ class IncidentTriageEnvironment:
             )
             return reward, gt
 
-        # ── Root cause scoring (40% weight) ──
+        # ── Root cause scoring (30% weight) ──
         root_cause_score = self._score_root_cause(
             self._diagnosis.root_cause,
             self._diagnosis.root_cause_service,
@@ -472,8 +472,8 @@ class IncidentTriageEnvironment:
             gt["root_cause_service"],
         )
 
-        # ── Affected services scoring (25% weight) ──
-        affected_score = self._score_affected_services(
+        # ── Affected services scoring (20% weight) ──
+        affected_score, affected_diff = self._score_affected_services_f1(
             self._diagnosis.affected_services,
             gt["affected_services"],
         )
@@ -487,23 +487,28 @@ class IncidentTriageEnvironment:
         # ── Efficiency bonus (15% weight) ──
         efficiency = self._score_efficiency()
 
+        # ── Reasoning trace scoring (15% weight) ──
+        reasoning_score = self._score_reasoning_trace(gt["root_cause_service"])
+
         # Weighted total
         total = (
-            0.40 * root_cause_score
-            + 0.25 * affected_score
+            0.30 * root_cause_score
+            + 0.20 * affected_score
             + 0.20 * remediation_score
             + 0.15 * efficiency
+            + 0.15 * reasoning_score
         )
 
         explanation_parts = [
-            f"Root cause identification: {root_cause_score:.2f}/1.0 (40% weight)",
+            f"Root cause identification: {root_cause_score:.2f}/1.0 (30% weight)",
             f"  - Expected service: {gt['root_cause_service']}, Got: {self._diagnosis.root_cause_service}",
-            f"Affected services: {affected_score:.2f}/1.0 (25% weight)",
-            f"  - Expected: {gt['affected_services']}, Got: {self._diagnosis.affected_services}",
+            f"Affected services (F1): {affected_score:.2f}/1.0 (20% weight)",
+            f"  - Diff: {affected_diff}",
             f"Remediation quality: {remediation_score:.2f}/1.0 (20% weight)",
+            f"Reasoning trace: {reasoning_score:.2f}/1.0 (15% weight)",
             f"Efficiency: {efficiency:.2f}/1.0 (15% weight)",
             f"  - Used {self._step}/{self._max_steps} steps",
-            f"TOTAL: {total:.3f}",
+            f"TOTAL: {total:.4f}",
         ]
 
         reward = Reward(
@@ -512,6 +517,7 @@ class IncidentTriageEnvironment:
             affected_services_score=round(affected_score, 4),
             remediation_score=round(remediation_score, 4),
             efficiency_bonus=round(efficiency, 4),
+            reasoning_trace_score=round(reasoning_score, 4),
             explanation="\n".join(explanation_parts),
         )
 
@@ -539,20 +545,57 @@ class IncidentTriageEnvironment:
 
         return min(1.0, score)
 
-    def _score_affected_services(
+    def _score_affected_services_f1(
         self, submitted: list[str], ground_truth: list[str],
-    ) -> float:
-        """Jaccard similarity between submitted and ground truth affected services."""
+    ) -> tuple[float, str]:
+        """Compute F1 score for affected services identification."""
         sub_set = {s.lower().strip() for s in submitted}
         gt_set = {s.lower().strip() for s in ground_truth}
 
         if not gt_set:
-            return 1.0 if not sub_set else 0.0
+            return (1.0 if not sub_set else 0.0), "No affected services expected."
 
-        intersection = len(sub_set & gt_set)
-        union = len(sub_set | gt_set)
+        tp = len(sub_set & gt_set)
+        fp = len(sub_set - gt_set)
+        fn = len(gt_set - sub_set)
 
-        return intersection / union if union > 0 else 0.0
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+
+        f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+
+        diff_parts = []
+        if fp:
+            diff_parts.append(f"False Positives (incorrect): {list(sub_set - gt_set)}")
+        if fn:
+            diff_parts.append(f"False Negatives (missed): {list(gt_set - sub_set)}")
+        if not fp and not fn:
+            diff_parts.append("Perfect match.")
+
+        return f1, "; ".join(diff_parts)
+
+    def _score_reasoning_trace(self, gt_service: str) -> float:
+        """Analyze action history for evidence of logical investigation."""
+        score = 0.0
+        # Evidence of Investigation (0.5 pts): Did they query logs/metrics of the RC service?
+        investigated = any(
+            h.get("action_type") in ("query_logs", "query_metrics", "get_service_info") and
+            h.get("parameters", {}).get("service", "").lower().strip() == gt_service.lower().strip()
+            for h in self._action_history
+        )
+        if investigated:
+            score += 0.5
+
+        # Topological Awareness (0.5 pts): Did they check dependencies of any degraded service?
+        # Note: In our scenarios, the initial alert or subsequent investigations reveal degraded services.
+        checked_deps = any(
+            h.get("action_type") == "check_dependencies"
+            for h in self._action_history
+        )
+        if checked_deps:
+            score += 0.5
+
+        return score
 
     def _score_remediation(self, submitted: str, ground_truth: str) -> float:
         """Score remediation using keyword overlap."""
