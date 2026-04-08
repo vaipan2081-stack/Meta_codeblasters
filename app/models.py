@@ -117,6 +117,7 @@ class Reward(BaseModel):
     affected_services_score: float = Field(0.0, ge=0.0, le=1.0)
     remediation_score: float = Field(0.0, ge=0.0, le=1.0)
     efficiency_bonus: float = Field(0.0, ge=0.0, le=1.0)
+    reasoning_trace_score: float = Field(0.0, ge=0.0, le=1.0)
     explanation: str = Field("", description="Human-readable breakdown")
 
 

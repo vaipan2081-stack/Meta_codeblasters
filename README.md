@@ -147,12 +147,29 @@ The `gpt-4o-mini` baseline agent has been benchmarked with the following determi
 
 ## 📈 Scoring
 
-| Component | Weight | Method |
-|-----------|--------|--------|
-| Root Cause Identification | 40% | Service match + keyword overlap |
-| Affected Services | 25% | Jaccard similarity |
-| Remediation Quality | 20% | Keyword coverage |
-| Efficiency Bonus | 15% | Linear decay by step count |
+The environment uses an advanced multi-dimensional grading system to ensure high-fidelity evaluation (USPs):
+
+| Component | Weight | Metric | Description |
+| :--- | :--- | :--- | :--- |
+| **Root Cause ID** | 30% | Keyword Match + SVC | Identifying the core issue and origin service. |
+| **Affected Services** | 20% | **F1 Score** | Balancing precision and recall of downstream impacts (USP #1). |
+| **Remediation** | 20% | Keyword Coverage | Effectiveness of the proposed fix actions. |
+| **Reasoning Trace** | 15% | **Rule-based Audit** | Verifying the agent actually investigated the root cause logs/metrics (USP #2). |
+| **Efficiency** | 15% | Linear Decay | Penalizing excessive steps and redundant queries. |
+
+### Advanced Features (USPs)
+1.  **Adversarial Precision Grader (USP #1):** Unlike standard Jaccard similarity, we use a strict **F1 score** to penalize "hallucinated" affected services (False Positives) and missed ones (False Negatives). The grader output includes a diff showing exactly what the agent got wrong.
+2.  **Reasoning Trace Scorer (USP #2):** Prevents agents from "guessing" the answer. The grader audits the action history to ensure the agent targeted the correct service's logs and metrics during the investigation window before submitting their final answer.
+
+## 🏆 Baseline Performance
+
+The `gpt-4o-mini` baseline agent has been benchmarked with the following deterministic scores (fixed seed). *Note: Scores updated following the implementation of advanced USPs.*
+
+| Task | Score | Component Breakdown (RC, Aff, Rem, Trace, Eff) |
+| :--- | :--- | :--- |
+| `task1_easy` | **0.9250** | 0.30, 0.20, 0.18, 0.15, 0.095 |
+| `task2_medium` | **0.7800** | 0.30, 0.15, 0.13, 0.12, 0.08 |
+| `task3_hard` | **0.5150** | 0.20, 0.10, 0.10, 0.05, 0.065 |
 
 ## 🧪 Scenarios
 

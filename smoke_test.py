@@ -177,10 +177,11 @@ def smoke_test(base_url: str) -> bool:
     check("Has explanation", len(reward.get("explanation", "")) > 0)
     check("Has ground truth summary", len(result.get("ground_truth_summary", "")) > 0)
     print(f"\n  📊 Score: {reward['total_score']:.3f}")
-    print(f"     Root cause:  {reward['root_cause_score']:.3f}")
-    print(f"     Affected:    {reward['affected_services_score']:.3f}")
-    print(f"     Remediation: {reward['remediation_score']:.3f}")
-    print(f"     Efficiency:  {reward['efficiency_bonus']:.3f}")
+    print(f"     Root cause:      {reward['root_cause_score']:.3f}")
+    print(f"     Affected (F1):   {reward['affected_services_score']:.3f}")
+    print(f"     Remediation:     {reward['remediation_score']:.3f}")
+    print(f"     Reasoning Trace: {reward['reasoning_trace_score']:.3f}")
+    print(f"     Efficiency:      {reward['efficiency_bonus']:.3f}")
 
     # 14b. Determinism check: same scenario + same diagnosis should produce same score
     print("\n1️⃣4️⃣b  Determinism Check")
