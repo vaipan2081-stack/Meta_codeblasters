@@ -51,12 +51,12 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
 - [ ] Update README to match final implementation and judging rubric
   - Owner: 
   - Done criteria: includes environment motivation, exact action/observation schema, task descriptions/difficulty, setup, docker run, baseline/inference commands, reproducible scores, and troubleshooting.
-  - Notes: current README is good but not fully aligned to final submission checklist.
+  - Notes: Action + observation schema and reproducibility commands added; baseline score table still requires real credential-backed run outputs.
 
 - [ ] Produce reproducible baseline report for all 3 tasks
   - Owner: 
   - Done criteria: fixed-seed run table with per-task and overall score, model/version noted, command included.
-  - Notes: keep this in README and optionally a separate artifact.
+  - Notes: blocked by missing model credentials/env vars in local environment (API_BASE_URL/MODEL_NAME/HF_TOKEN/OPENAI_API_KEY not set).
 
 - [x] Harden smoke_test.py for submission reality
   - Owner: Tushya
@@ -66,7 +66,7 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
 - [ ] Verify docker runtime and performance limits
   - Owner: 
   - Done criteria: inference finishes under 20 minutes on constrained machine assumptions (2 vCPU, 8 GB RAM).
-  - Notes: include timing evidence in notes.
+  - Notes: Docker build now passes and container runtime endpoint checks pass (`/health`, `/reset`). Performance-limit evidence for inference still pending due missing model credentials.
 
 - [ ] Hugging Face Space deployment dry run
   - Owner: 
@@ -116,3 +116,10 @@ Scope used: repo code + Official Website Info + team WhatsApp notes + attached P
 - [ ] docker build and run verified
 - [ ] HF URL reset ping verified
 - [ ] final scores and logs archived in team chat
+
+## Fresh evidence (2026-04-08)
+- Local API health check passed: `/health` returned `{"status":"healthy","environment":"incident-triage"}`.
+- Local smoke suite passed: `43/43` checks passed, including deterministic score check (`first=0.8142`, `second=0.8142`).
+- Docker availability confirmed: `docker --version` succeeded.
+- Docker build succeeded after mitigation (`Dockerfile` pip retries/timeout + `.dockerignore`), and containerized `/health` + `/reset` checks passed.
+- Full smoke suite passed against Docker runtime (`py smoke_test.py --api-url http://127.0.0.1:7862`): `43/43` passed.

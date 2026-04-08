@@ -113,7 +113,7 @@ def get_tasks():
 
 
 @app.post("/reset", response_model=Observation)
-def reset_environment(request: ResetRequest):
+def reset_environment(request: ResetRequest | None = None):
     """Reset the environment to start a new episode.
 
     Args:
@@ -123,7 +123,9 @@ def reset_environment(request: ResetRequest):
         Initial observation with the incident alert and available actions.
     """
     try:
-        obs = env.reset(task_id=request.task_id, seed=request.seed)
+        task_id = request.task_id if request else "task1_easy"
+        seed = request.seed if request else None
+        obs = env.reset(task_id=task_id, seed=seed)
         return obs
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

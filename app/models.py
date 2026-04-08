@@ -39,7 +39,7 @@ class ActionType(str, Enum):
 # ── Request / Response Models ───────────────────────────────────────────────
 
 class ResetRequest(BaseModel):
-    task_id: str = Field(..., description="Task identifier, e.g. 'task1_easy'")
+    task_id: str = Field("task1_easy", description="Task identifier, e.g. 'task1_easy'")
     seed: Optional[int] = Field(None, description="Random seed for scenario selection")
 
 
