@@ -64,7 +64,7 @@ def run_baseline(
     task_id: str,
     api_url: str,
     model: str = "gpt-4o",
-    seed: int | None = None,
+    seed: int | None = 42,
     verbose: bool = True,
 ) -> dict[str, Any]:
     """Run the baseline agent on a task and return the grading result."""
@@ -100,12 +100,21 @@ def run_baseline(
 
     while step < max_steps:
         # Get LLM action
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.1,
-            max_tokens=1024,
-        )
+        request_payload: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.0,
+            "max_tokens": 1024,
+        }
+        if seed is not None:
+            request_payload["seed"] = seed
+
+        try:
+            response = client.chat.completions.create(**request_payload)
+        except TypeError:
+            # Some compatible endpoints may not support the seed field.
+            request_payload.pop("seed", None)
+            response = client.chat.completions.create(**request_payload)
 
         assistant_msg = response.choices[0].message.content
         messages.append({"role": "assistant", "content": assistant_msg})
@@ -183,7 +192,7 @@ def main():
     parser.add_argument("--task", default="task1_easy", choices=["task1_easy", "task2_medium", "task3_hard"])
     parser.add_argument("--api-url", default="http://localhost:7860")
     parser.add_argument("--model", default="gpt-4o")
-    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
 

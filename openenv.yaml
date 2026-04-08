@@ -5,7 +5,7 @@ description: >
   microservices architecture. Tasks range from single-service failures to complex
   cascading outages with red herrings.
 
-author: vaibhav
+author: codeblasters-team
 version: "1.0.0"
 
 tasks:
