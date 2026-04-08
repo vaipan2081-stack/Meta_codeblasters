@@ -7,111 +7,173 @@ sdk: docker
 app_port: 7860
 ---
 
-# Incident Triage Environment — OpenEnv Hackathon Submission
+# Incident Triage OpenEnv Environment
 
-A production incident triage environment for evaluating LLM agents' ability to diagnose complex distributed system failures.
+Production incident triage environment for evaluating LLM agents on realistic SRE workflows.
 
-## Domain: Production Incident Triage
+This repository is prepared for Round 1 OpenEnv submission and implements:
+- Real-world domain simulation (production outage diagnosis)
+- OpenEnv-compatible API (`reset`, `step`, `state`) with typed models
+- Three graded tasks (`easy`, `medium`, `hard`) with reward range `[0.0, 1.0]`
+- Baseline and submission inference scripts
+- Dockerized deployment for Hugging Face Spaces
 
-Agents receive an alert about a production incident in a simulated microservices architecture and must:
-1. **Investigate** — Query logs, metrics, alerts, traces, and service dependencies
-2. **Diagnose** — Identify the root cause and affected services
-3. **Prescribe** — Recommend remediation steps
+## 1) Requirement Mapping (Submission)
 
-### Why This Domain?
-- **Novel**: Unlike code review or Q&A tasks, incident triage requires multi-step systems reasoning
-- **Realistic**: Based on actual SRE scenarios (OOM crashes, connection leaks, cascading failures)
-- **Measurable**: Clear ground truth enables objective scoring across multiple dimensions
-- **Scalable difficulty**: From single-service crashes to complex failures with red herrings
+- Real-world task: incident triage across microservices
+- OpenEnv interface: implemented via FastAPI endpoints and typed Pydantic models
+- Minimum 3 tasks with graders: `task1_easy`, `task2_medium`, `task3_hard`
+- Meaningful reward function: partial progress + component scoring + efficiency
+- Baseline script: `baseline.py` with deterministic seed option
+- Submission inference script: `inference.py` in repository root, structured `[START]/[STEP]/[END]` logs
+- Deployment artifacts: `Dockerfile`, HF Space metadata in README frontmatter, `openenv.yaml`
 
-##  Task Difficulty Tiers
+## 2) Repository Structure
 
-| Task | Difficulty | Max Steps | Description |
-|------|-----------|-----------|-------------|
-| `task1_easy` | Easy | 15 | Single service failure with clear error logs |
-| `task2_medium` | Medium | 25 | Multi-service cascading failure with correlated logs |
-| `task3_hard` | Hard | 35 | Subtle degradation with misleading symptoms and red herrings |
-
-## Architecture
-
-```
-├── app/
-│   ├── main.py           # FastAPI endpoints
-│   ├── models.py          # Pydantic request/response models
-│   └── environment.py     # Core state machine
-├── data/
-│   └── scenarios/
-│       └── scenarios.py   # Pre-built incident scenarios with ground truth
-├── graders/
-│   └── grader.py          # Standalone grading module
-├── baseline.py            # GPT-4o baseline agent
-├── smoke_test.py          # Endpoint validation tests
-├── openenv.yaml           # Environment configuration
-├── Dockerfile             # HuggingFace Spaces deployment
-└── requirements.txt
+```text
+app/
+  main.py            FastAPI routes (`/reset`, `/step`, `/state`, `/tasks`, `/grader`, `/health`)
+  models.py          Typed request/response models
+  environment.py     Core environment state machine and transition logic
+data/scenarios/
+  scenarios.py       Task scenarios and ground truth
+graders/
+  grader.py          Standalone grading logic
+baseline.py          Baseline runner
+inference.py         Required submission inference runner
+smoke_test.py        Endpoint smoke tests
+openenv.yaml         Environment metadata and tasks
+Dockerfile           Container build for local + HF Spaces
 ```
 
-##  Quick Start
+## 3) Tasks and Difficulty
 
-### Local Development
+| Task ID | Difficulty | Max Steps | Objective |
+|---|---|---:|---|
+| `task1_easy` | Easy | 15 | Diagnose clear single-service failure |
+| `task2_medium` | Medium | 25 | Diagnose cascading multi-service failure |
+| `task3_hard` | Hard | 35 | Diagnose subtle degradation with red herrings |
+
+## 4) API Contract
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/health` | Liveness/health check |
+| `GET` | `/tasks` | List available tasks |
+| `POST` | `/reset` | Start episode (`task_id`, optional `seed`) |
+| `POST` | `/step` | Apply action and return `observation`, `reward`, `done`, `info` |
+| `GET` | `/state` | Read current environment state |
+| `POST` | `/grader` | Grade current episode |
+| `GET` | `/baseline` | Baseline metadata |
+
+### Observation Shape
+
+Each step returns:
+- `observation`: typed observation payload
+- `reward`: float in `[0.0, 1.0]` contribution space
+- `done`: episode completion flag
+- `info`: step metadata
+
+### Supported Actions
+
+- `list_services`
+- `check_alerts`
+- `query_logs`
+- `query_metrics`
+- `get_service_info`
+- `check_dependencies`
+- `query_traces`
+- `submit_diagnosis`
+
+## 5) Reward and Grading
+
+Current grader component weights:
+- Root cause identification: `40%`
+- Affected services: `25%`
+- Remediation quality: `20%`
+- Efficiency bonus: `15%`
+
+Final score is clamped to `[0.0, 1.0]`.
+
+## 6) Quick Start (Local)
+
+### Install
 
 ```bash
-# Install dependencies
 py -m pip install -r requirements.txt
+```
 
-# Start the server
-py -m uvicorn app.main:app --host 0.0.0.0 --port 7860 --reload
+### Run Environment API
 
-# Run smoke tests (in another terminal)
+```bash
+py -m uvicorn app.main:app --host 0.0.0.0 --port 7860
+```
+
+### Run Smoke Test
+
+```bash
 py smoke_test.py --api-url http://127.0.0.1:7860
 ```
 
-### Docker
+## 7) Docker (Required)
 
 ```bash
 docker build -t incident-triage-env .
 docker run -p 7860:7860 incident-triage-env
 ```
 
-### Run Baseline Agent
+Expected health check:
 
 ```bash
-# Requires OPENAI_API_KEY environment variable
-py baseline.py --task task1_easy
-py baseline.py --task task2_medium --model gpt-4o-mini
-py baseline.py --task task3_hard
+curl http://127.0.0.1:7860/health
 ```
 
-### Run Submission Inference Script
+## 8) Baseline Script
+
+`baseline.py` supports deterministic runs with `--seed`.
+
+Example:
 
 ```bash
-# Required for model calls
-set API_BASE_URL=https://your-llm-endpoint/v1
-set MODEL_NAME=your-model-name
-set HF_TOKEN=your-token
+py baseline.py --task task1_easy --model gpt-4o-mini --seed 42
+py baseline.py --task task2_medium --model gpt-4o-mini --seed 42
+py baseline.py --task task3_hard --model gpt-4o-mini --seed 42
+```
 
-# Optional, defaults to local server
+## 9) Submission Inference Script (Required)
+
+Required environment variables (per submission instructions):
+- `API_BASE_URL`
+- `MODEL_NAME`
+- `HF_TOKEN`
+
+Supported optional variables:
+- `OPENAI_API_KEY`
+- `ENV_URL` (default `http://localhost:7860`)
+- `TASK_NAME` (default `task1_easy`)
+- `MAX_STEPS`
+
+Run:
+
+```bash
+set API_BASE_URL=https://your-endpoint/v1
+set MODEL_NAME=your-model
+set HF_TOKEN=your-token
 set ENV_URL=http://127.0.0.1:7860
 set TASK_NAME=task1_easy
-
 py inference.py
 ```
 
-`inference.py` emits structured logs in `[START]`, `[STEP]`, `[END]` format.
+`inference.py` emits strict structured logs:
+- `[START] task=... env=... model=...`
+- `[STEP] step=... action=... reward=... done=... error=...`
+- `[END] success=... steps=... score=... rewards=[...]`
 
-### LM Studio (OpenAI-Compatible) Local Testing
+## 10) OpenAI-Compatible Local Testing (LM Studio)
 
-Using LM Studio is acceptable for local development/testing as long as it exposes OpenAI-compatible APIs.
+For local testing without paid OpenAI API, OpenAI-compatible endpoints can be used.
 
-Verified endpoints:
-- `GET /v1/models`
-- `POST /v1/chat/completions`
-
-Verified local models (example):
-- `qwen/qwen3.5-9b`
-- `dolphin-2.9.4-llama3.1-8b`
-
-Windows example for local run with LM Studio + Qwen:
+Validated local setup examples:
 
 ```bash
 set ENV_URL=http://127.0.0.1:7860
@@ -122,8 +184,6 @@ set MAX_STEPS=4
 py inference.py
 ```
 
-Windows example for local run with LM Studio + Dolphin:
-
 ```bash
 set ENV_URL=http://127.0.0.1:7860
 set API_BASE_URL=http://localhost:1234/v1
@@ -133,141 +193,28 @@ set MAX_STEPS=4
 py inference.py
 ```
 
-Observed test output pattern:
-- `[START] task=task1_easy ...`
-- `[STEP] ...` (multiple steps)
-- `[END] success=false steps=4 score=0.0000 rewards=[0.12, 0.12, 0.12, 0.1]`
+If LM Studio returns `400 Model unloaded.`, reload the model and rerun.
 
-Observed Dolphin run output:
-- `[START] task=task1_easy env=incident-triage model=dolphin-2.9.4-llama3.1-8b`
-- `[STEP] step=1 action=list_services reward=0.1200 done=false error=none`
-- `[STEP] step=2 action=check_alerts reward=0.1200 done=false error=none`
-- `[STEP] step=3 action=query_logs reward=0.0300 done=false error=none`
-- `[STEP] step=4 action=query_metrics reward=0.0000 done=false error=none`
-- `[END] success=false steps=4 score=0.0000 rewards=[0.12, 0.12, 0.03, 0.0]`
+## 11) Hugging Face Spaces Deployment
 
-Note:
-- If LM Studio unloads the model during a run, the API may return `400 Model unloaded.`. Reload the model in LM Studio and rerun.
+This repo is configured for Docker-based HF Spaces deployment:
+- `sdk: docker` in README frontmatter
+- App served on port `7860`
+- `Dockerfile` included in repository root
 
-### Run Human Demo UI (Gradio)
+## 12) Pre-Submission Checklist (Must Pass)
 
-```bash
-# Start backend first (required)
-py -m uvicorn app.main:app --host 0.0.0.0 --port 7860
+- HF Space deploys and responds (`/health`, `/reset`)
+- OpenEnv metadata present in `openenv.yaml`
+- Docker image builds and starts cleanly
+- `inference.py` exists in repo root and runs with required env vars
+- Structured stdout format is preserved: `[START]`, `[STEP]`, `[END]`
+- Three tasks are exposed and gradable
+- Smoke tests pass against local or hosted API
 
-# Optional ENV_URL if API is remote
-set ENV_URL=http://127.0.0.1:7860
-
-py app_ui.py
-```
-
-The UI starts on `http://127.0.0.1:7861` and supports reset, step actions, state inspection, and grading.
-
-## 🏆 Baseline Performance (Reproducible)
-
-Run the baseline with a fixed seed and record real scores before final submission.
-
-```bash
-py baseline.py --task task1_easy --model gpt-4o-mini --seed 42
-py baseline.py --task task2_medium --model gpt-4o-mini --seed 42
-py baseline.py --task task3_hard --model gpt-4o-mini --seed 42
-```
-
-Fill this table from real run output (keep the terminal logs as evidence):
-
-| Task | Score | Model | Seed | Evidence |
-|------|-------|-------|------|----------|
-| `task1_easy` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
-| `task2_medium` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
-| `task3_hard` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/tasks` | List available tasks |
-| `POST` | `/reset` | Start a new episode (`{"task_id": "task1_easy"}`) |
-| `POST` | `/step` | Take an action and receive `observation`, `reward`, `done`, `info` |
-| `GET` | `/state` | Get current environment state |
-| `POST` | `/grader` | Grade the episode after diagnosis |
-| `GET` | `/baseline` | Baseline agent info |
-
-## Agent Actions
-
-| Action | Parameters | Description |
-|--------|-----------|-------------|
-| `list_services` | — | List all services in scope |
-| `check_alerts` | `service?`, `severity?` | View active alerts |
-| `query_logs` | `service` (required), `level?`, `keyword?` | Query service logs |
-| `query_metrics` | `service` (required), `metric_name?` | Query metrics |
-| `get_service_info` | `service` (required) | Detailed service info |
-| `check_dependencies` | `service` (required) | Dependency graph |
-| `query_traces` | `trace_id?`, `service?` | Distributed traces |
-| `submit_diagnosis` | `root_cause`, `root_cause_service`, `affected_services`, `remediation` | Submit diagnosis |
-
-## 👀 Observation Space
-
-Every step returns a structured payload:
-
-```json
-{
-	"observation": {
-		"observation_type": "logs|metrics|alerts|traces|service_info|service_list|dependencies|diagnosis_submitted|timeout|error",
-		"data": {},
-		"message": "human-readable summary",
-		"step_number": 0,
-		"remaining_steps": 15
-	},
-	"reward": 0.0,
-	"done": false,
-	"info": {
-		"step": 0,
-		"max_steps": 15,
-		"task_id": "task1_easy"
-	}
-}
-```
-
-## 📈 Scoring
-
-| Component | Weight | Method |
-|-----------|--------|--------|
-| Root Cause Identification | 40% | Service match + keyword overlap |
-| Affected Services | 25% | Jaccard similarity |
-| Remediation Quality | 20% | Keyword coverage |
-| Efficiency Bonus | 15% | Linear decay by step count |
-
-## Scenarios
-
-### Easy: OOM Database Crash
-PostgreSQL OOM on `order-db` → cascading 503s on `order-service`. Clear error trail.
-
-### Easy: Redis Cache Failure
-Redis segfault → `auth-service` session fallback to DB → authentication latency spike.
-
-### Medium: Kafka Broker Failure
-Broker node loss → partition leader election storm → event processing failures across 3 services.
-
-### Medium: Connection Pool Leak
-Slow leak in `payment-service` refund handler → pool exhaustion → payment failures. Stripe latency as red herring.
-
-### Hard: JVM Memory Leak with GC Storm
-Subtle memory leak → escalating GC pauses → Kafka heartbeat failures + DB connection resets. Network blip and Redis evictions as red herrings.
-
-##  License
-
-MIT
-
-## Validation Checklist
-
-- Local smoke test passes (`py smoke_test.py --api-url http://127.0.0.1:7860`)
-- Docker container starts and `/health` returns 200
-- `inference.py` runs with required env vars and prints `[START]/[STEP]/[END]`
-- Baseline runs on all three tasks with reproducible seed values
-- Hosted URL (HF Space) passes smoke test using public endpoint
-
-## 👩‍⚖️ Judge / Reviewer Guide
+## 13) References
 
 - Judge runbook: `JUDGE.md`
-- Hosted deployment checklist: `HOSTED_VALIDATION_CHECKLIST.md`
+- Hosted validation checklist: `HOSTED_VALIDATION_CHECKLIST.md`
+- Architecture notes: `ARCHITECTURE.md`
+- Pending work tracker: `PENDING_WORK_TRACKER.md`
