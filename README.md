@@ -122,10 +122,29 @@ set MAX_STEPS=4
 py inference.py
 ```
 
+Windows example for local run with LM Studio + Dolphin:
+
+```bash
+set ENV_URL=http://127.0.0.1:7860
+set API_BASE_URL=http://localhost:1234/v1
+set MODEL_NAME=dolphin-2.9.4-llama3.1-8b
+set OPENAI_API_KEY=lm-studio
+set MAX_STEPS=4
+py inference.py
+```
+
 Observed test output pattern:
 - `[START] task=task1_easy ...`
 - `[STEP] ...` (multiple steps)
 - `[END] success=false steps=4 score=0.0000 rewards=[0.12, 0.12, 0.12, 0.1]`
+
+Observed Dolphin run output:
+- `[START] task=task1_easy env=incident-triage model=dolphin-2.9.4-llama3.1-8b`
+- `[STEP] step=1 action=list_services reward=0.1200 done=false error=none`
+- `[STEP] step=2 action=check_alerts reward=0.1200 done=false error=none`
+- `[STEP] step=3 action=query_logs reward=0.0300 done=false error=none`
+- `[STEP] step=4 action=query_metrics reward=0.0000 done=false error=none`
+- `[END] success=false steps=4 score=0.0000 rewards=[0.12, 0.12, 0.03, 0.0]`
 
 Note:
 - If LM Studio unloads the model during a run, the API may return `400 Model unloaded.`. Reload the model in LM Studio and rerun.
