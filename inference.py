@@ -25,6 +25,7 @@ TASK_NAME = os.getenv("TASK_NAME", "task1_easy")
 MAX_STEPS = int(os.getenv("MAX_STEPS", "20"))
 SUCCESS_SCORE_THRESHOLD = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.65"))
 BENCHMARK = "incident-triage"
+SUPPORTED_TASKS = ["task1_easy", "task2_medium", "task3_hard"]
 
 
 SYSTEM_PROMPT = """You are an SRE agent diagnosing a production incident.
@@ -79,15 +80,8 @@ def build_prompt(observation: dict[str, Any], history: list[str]) -> str:
     )
 
 
-def run() -> None:
-    if not API_KEY:
-        raise RuntimeError("Missing API key. Set HF_TOKEN or OPENAI_API_KEY.")
-    if not API_BASE_URL:
-        raise RuntimeError("Missing API_BASE_URL for model endpoint.")
-
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-
-    reset_resp = requests.post(f"{ENV_URL.rstrip('/')}/reset", json={"task_id": TASK_NAME, "seed": 42}, timeout=30)
+def run_task(client: OpenAI, task_name: str) -> None:
+    reset_resp = requests.post(f"{ENV_URL.rstrip('/')}/reset", json={"task_id": task_name, "seed": 42}, timeout=30)
     reset_resp.raise_for_status()
     observation = reset_resp.json()
 
@@ -97,7 +91,7 @@ def run() -> None:
     score = 0.0
     success = False
 
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
+    log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
 
     for step in range(1, MAX_STEPS + 1):
         prompt = build_prompt(observation, history)
@@ -140,6 +134,22 @@ def run() -> None:
     success = score >= SUCCESS_SCORE_THRESHOLD
 
     log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
+
+
+def run() -> None:
+    if not API_KEY:
+        raise RuntimeError("Missing API key. Set HF_TOKEN or OPENAI_API_KEY.")
+    if not API_BASE_URL:
+        raise RuntimeError("Missing API_BASE_URL for model endpoint.")
+
+    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+
+    if TASK_NAME.lower() == "all":
+        for task_name in SUPPORTED_TASKS:
+            run_task(client, task_name)
+        return
+
+    run_task(client, TASK_NAME)
 
 
 if __name__ == "__main__":
