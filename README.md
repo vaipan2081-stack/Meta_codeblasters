@@ -140,6 +140,14 @@ py baseline.py --task task2_medium --model gpt-4o-mini --seed 42
 py baseline.py --task task3_hard --model gpt-4o-mini --seed 42
 ```
 
+Reference baseline scores (documented in service metadata):
+
+| Task | Score |
+|---|---:|
+| `task1_easy` | `0.9100` |
+| `task2_medium` | `0.7600` |
+| `task3_hard` | `0.4850` |
+
 ## 9) Submission Inference Script (Required)
 
 Required environment variables (per submission instructions):
@@ -172,6 +180,7 @@ py inference.py
 ## 10) OpenAI-Compatible Local Testing (LM Studio)
 
 For local testing without paid OpenAI API, OpenAI-compatible endpoints can be used.
+This does not change the submission requirement to use the OpenAI client in `inference.py`.
 
 Validated local setup examples:
 
