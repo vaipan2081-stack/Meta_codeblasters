@@ -1,0 +1,42 @@
+name: Deploy to Hugging Face Space
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install tooling
+      run: |
+        python -m pip install --upgrade pip
+        pip install huggingface_hub
+
+    - name: Create HF Space (if missing)
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        python - <<'PY'
+from huggingface_hub import create_repo
+create_repo(repo_id="jtushya05/meta_codeblasters", repo_type="space", space_sdk="docker", private=False, exist_ok=True)
+print('CREATED_OR_EXISTS')
+PY
+
+    - name: Push to HF Space
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git remote add hf "https://huggingface.co/spaces/jtushya05/meta_codeblasters.git" || true
+        git push -u "https://${HF_TOKEN}@huggingface.co/spaces/jtushya05/meta_codeblasters.git" HEAD:main --force
