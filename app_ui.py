@@ -15,23 +15,32 @@ DEFAULT_TASK = os.getenv("TASK_NAME", "task1_easy")
 
 
 def _post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
-    response = requests.post(f"{ENV_URL}{path}", json=payload, timeout=30)
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.post(f"{ENV_URL}{path}", json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as exc:
+        raise RuntimeError(f"Request to {ENV_URL}{path} failed: {exc}") from exc
 
 
 def _get(path: str) -> dict[str, Any]:
-    response = requests.get(f"{ENV_URL}{path}", timeout=30)
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.get(f"{ENV_URL}{path}", timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as exc:
+        raise RuntimeError(f"Request to {ENV_URL}{path} failed: {exc}") from exc
 
 
 def reset_episode(task_id: str, seed: float | None) -> str:
     payload: dict[str, Any] = {"task_id": task_id}
     if seed is not None:
         payload["seed"] = int(seed)
-    data = _post("/reset", payload)
-    return json.dumps(data, indent=2)
+    try:
+        data = _post("/reset", payload)
+        return json.dumps(data, indent=2)
+    except RuntimeError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
 
 
 def take_action(action_type: str, parameters_json: str) -> tuple[str, str]:
@@ -41,25 +50,37 @@ def take_action(action_type: str, parameters_json: str) -> tuple[str, str]:
         return "", f"Invalid JSON in parameters: {e}"
 
     payload = {"action_type": action_type, "parameters": params}
-    data = _post("/step", payload)
-    return json.dumps(data, indent=2), ""
+    try:
+        data = _post("/step", payload)
+        return json.dumps(data, indent=2), ""
+    except RuntimeError as exc:
+        return "", str(exc)
 
 
 def get_state() -> str:
-    data = _get("/state")
-    return json.dumps(data, indent=2)
+    try:
+        data = _get("/state")
+        return json.dumps(data, indent=2)
+    except RuntimeError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
 
 
 def grade_episode() -> str:
-    data = _post("/grader", {})
-    return json.dumps(data, indent=2)
+    try:
+        data = _post("/grader", {})
+        return json.dumps(data, indent=2)
+    except RuntimeError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
 
 
 def list_tasks() -> tuple[list[str], str]:
-    tasks = _get("/tasks")
-    ids = [t["task_id"] for t in tasks]
-    details = json.dumps(tasks, indent=2)
-    return ids, details
+    try:
+        tasks = _get("/tasks")
+        ids = [t["task_id"] for t in tasks]
+        details = json.dumps(tasks, indent=2)
+        return ids, details
+    except RuntimeError as exc:
+        return [DEFAULT_TASK], json.dumps({"error": str(exc)}, indent=2)
 
 
 with gr.Blocks(title="Incident Triage Demo") as demo:
