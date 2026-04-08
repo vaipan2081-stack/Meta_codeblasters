@@ -1,0 +1,9 @@
+.git/
+__pycache__/
+.venv/
+*.pyc
+*.pyo
+*.pyd
+.env
+backup.bundle
+Context for Agent/
