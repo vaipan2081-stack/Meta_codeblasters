@@ -7,6 +7,9 @@ description: >
 
 author: codeblasters-team
 version: "1.0.0"
+tags:
+  - openenv
+license: MIT
 
 tasks:
   task1_easy:
