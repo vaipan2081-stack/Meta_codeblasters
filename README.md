@@ -11,7 +11,7 @@ app_port: 7860
 
 A production incident triage environment for evaluating LLM agents' ability to diagnose complex distributed system failures.
 
-## 🎯 Domain: Production Incident Triage
+## Domain: Production Incident Triage
 
 Agents receive an alert about a production incident in a simulated microservices architecture and must:
 1. **Investigate** — Query logs, metrics, alerts, traces, and service dependencies
@@ -24,7 +24,7 @@ Agents receive an alert about a production incident in a simulated microservices
 - **Measurable**: Clear ground truth enables objective scoring across multiple dimensions
 - **Scalable difficulty**: From single-service crashes to complex failures with red herrings
 
-## 📊 Task Difficulty Tiers
+##  Task Difficulty Tiers
 
 | Task | Difficulty | Max Steps | Description |
 |------|-----------|-----------|-------------|
@@ -32,7 +32,7 @@ Agents receive an alert about a production incident in a simulated microservices
 | `task2_medium` | Medium | 25 | Multi-service cascading failure with correlated logs |
 | `task3_hard` | Hard | 35 | Subtle degradation with misleading symptoms and red herrings |
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ├── app/
@@ -51,7 +51,7 @@ Agents receive an alert about a production incident in a simulated microservices
 └── requirements.txt
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Local Development
 
@@ -131,7 +131,7 @@ Fill this table from real run output (keep the terminal logs as evidence):
 | `task2_medium` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
 | `task3_hard` | `TBD` | `gpt-4o-mini` | `42` | `baseline log` |
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -143,7 +143,7 @@ Fill this table from real run output (keep the terminal logs as evidence):
 | `POST` | `/grader` | Grade the episode after diagnosis |
 | `GET` | `/baseline` | Baseline agent info |
 
-## 🎮 Agent Actions
+## Agent Actions
 
 | Action | Parameters | Description |
 |--------|-----------|-------------|
@@ -188,7 +188,7 @@ Every step returns a structured payload:
 | Remediation Quality | 20% | Keyword coverage |
 | Efficiency Bonus | 15% | Linear decay by step count |
 
-## 🧪 Scenarios
+## Scenarios
 
 ### Easy: OOM Database Crash
 PostgreSQL OOM on `order-db` → cascading 503s on `order-service`. Clear error trail.
@@ -205,11 +205,11 @@ Slow leak in `payment-service` refund handler → pool exhaustion → payment fa
 ### Hard: JVM Memory Leak with GC Storm
 Subtle memory leak → escalating GC pauses → Kafka heartbeat failures + DB connection resets. Network blip and Redis evictions as red herrings.
 
-## 📜 License
+##  License
 
 MIT
 
-## ✅ Validation Checklist
+## Validation Checklist
 
 - Local smoke test passes (`py smoke_test.py --api-url http://127.0.0.1:7860`)
 - Docker container starts and `/health` returns 200
