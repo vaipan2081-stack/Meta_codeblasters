@@ -16,4 +16,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://randomvaibhav:$HF_TOKEN@huggingface.co/spaces/randomvaibhav/incident-triage-env hf-deploy:main
+        run: git push --force https://x-token:$HF_TOKEN@huggingface.co/spaces/randomvaibhav/incident-triage-env hf-deploy:main
