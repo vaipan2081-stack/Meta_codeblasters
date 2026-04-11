@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import (
+from server.models import (
     Action,
     EnvironmentState,
     GraderResult,
@@ -33,7 +33,7 @@ from app.models import (
     TaskInfo,
     Difficulty,
 )
-from app.environment import IncidentTriageEnvironment
+from server.environment import IncidentTriageEnvironment
 
 # ── App Setup ───────────────────────────────────────────────────────────────
 
@@ -208,11 +208,11 @@ def baseline_info():
 
 # ── Entrypoint ──────────────────────────────────────────────────────────────
 
-def start():
+def main():
     """Entry point for the server script."""
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=7860)
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
 
 
 if __name__ == "__main__":
-    start()
+    main()

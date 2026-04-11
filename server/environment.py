@@ -13,7 +13,7 @@ from typing import Any, Optional
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models import (
+from server.models import (
     Action,
     ActionType,
     Diagnosis,
@@ -25,8 +25,8 @@ from app.models import (
     Reward,
     ServiceInfo,
 )
-from data.scenarios.scenarios import SERVICES_CATALOG, get_scenario
-from graders.grader import compute_reward
+from server.data.scenarios.scenarios import SERVICES_CATALOG, get_scenario
+from server.graders.grader import compute_reward
 
 
 
