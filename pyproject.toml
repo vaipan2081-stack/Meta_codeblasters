@@ -7,7 +7,7 @@ name = "incident-triage-env"
 version = "1.0.0"
 description = "Production Incident Triage Environment for LLM Agents"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     {name = "Antigravity", email = "antigravity@example.com"}
 ]
@@ -19,7 +19,11 @@ dependencies = [
     "openai>=1.6.0",
     "pyyaml>=6.0",
     "gradio>=5.0.0",
+    "openenv-core>=0.1.0",
 ]
+
+[project.scripts]
+server = "app.main:start"
 
 [tool.setuptools]
 packages = ["app", "data", "graders"]
