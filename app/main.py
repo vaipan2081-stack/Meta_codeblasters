@@ -19,7 +19,7 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.models import (
@@ -113,17 +113,23 @@ def get_tasks():
 
 
 @app.post("/reset", response_model=Observation)
-def reset_environment(request: ResetRequest):
+def reset_environment(request: ResetRequest = Body(default=None)):
     """Reset the environment to start a new episode.
 
     Args:
-        request: Contains task_id (required) and optional seed.
+        request: Contains task_id (optional, defaults to 'task1_easy') and optional seed.
 
     Returns:
         Initial observation with the incident alert and available actions.
     """
+    task_id = "task1_easy"
+    seed = None
+    if request:
+        task_id = request.task_id or task_id
+        seed = request.seed
+
     try:
-        obs = env.reset(task_id=request.task_id, seed=request.seed)
+        obs = env.reset(task_id=task_id, seed=seed)
         return obs
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
